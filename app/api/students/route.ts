@@ -29,8 +29,9 @@ export async function GET(req: Request) {
     }
 
     const headers = rows[0].map((h: any) => String(h || '').trim());
+    const instuCol = headers.indexOf('cr69d_instucode');
 
-    const students = rows.slice(1).map(row => {
+    let students = rows.slice(1).map(row => {
         const student: any = {};
         headers.forEach((header, index) => {
             if (header) {
@@ -39,6 +40,11 @@ export async function GET(req: Request) {
         });
         return student;
     });
+
+    // FILTER BY ORGANIZATION if provided
+    if (org && instuCol !== -1) {
+        students = students.filter(s => String(s.cr69d_instucode || '').trim() === org);
+    }
 
     return NextResponse.json({ students });
 

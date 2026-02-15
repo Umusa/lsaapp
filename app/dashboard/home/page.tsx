@@ -138,7 +138,13 @@ const DashboardHome = () => {
             <CircularProgress percentage={stats?.activePercentage || 0} color="text-emerald-500" centerText={`${Math.round(stats?.activePercentage || 0)}%`} label="Active" />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={50} color="text-pink-500" centerText={`${stats?.genderRatio?.male || 0}/${stats?.genderRatio?.female || 0}`} label="Gender" />
+            <CircularProgress 
+              percentage={stats?.totalStudents ? (stats?.genderRatio?.male / stats?.totalStudents) * 100 : 0} 
+              color="text-pink-500" 
+              centerText={`${stats?.genderRatio?.male || 0}/${stats?.genderRatio?.female || 0}`} 
+              label="Gender" 
+              subText="M/F"
+            />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
             <CircularProgress percentage={(stats?.clearedBalanceCount / stats?.totalStudents) * 100 || 0} color="text-blue-600" centerText={`${stats?.clearedBalanceCount || 0}/${stats?.totalDebtors || 0}`} label="Cleared" />
@@ -214,14 +220,9 @@ const DashboardHome = () => {
                     <div>
                         <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-4">Levels</p>
                         <div className="space-y-4">
-                            {[
-                                { name: "External", count: 91 },
-                                { name: "Reading Readiness 1", count: 46 },
-                                { name: "Basic 2", count: 34 },
-                                { name: "Reading Readiness 2", count: 32 },
-                                { name: "Basic 1", count: 31 },
-                                { name: "Basic 3", count: 30 },
-                            ].map((level, i) => (
+                            {(stats?.levels || [
+                                { name: "No Data", count: 0 }
+                            ]).map((level: any, i: number) => (
                                 <div key={i} className="group cursor-pointer">
                                     <div className="flex justify-between items-center text-xs mb-1.5">
                                         <span className="text-slate-600 group-hover:text-blue-600 font-medium transition-colors">{level.name}</span>
@@ -230,7 +231,7 @@ const DashboardHome = () => {
                                     <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
                                         <div 
                                             className="h-full bg-emerald-500 transition-all duration-1000" 
-                                            style={{ width: `${(level.count / 100) * 100}%` }} 
+                                            style={{ width: `${stats?.totalStudents ? (level.count / stats.totalStudents) * 100 : 0}%` }} 
                                         />
                                     </div>
                                 </div>

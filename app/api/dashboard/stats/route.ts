@@ -36,26 +36,25 @@ export async function GET(req: Request) {
     const headers = rows[0].map((h: any) => String(h || '').trim());
     
     // Identified columns from diagnostic
-    const orgCol = headers.indexOf('owningbusinessunit'); // Org ID from sample looks like a GUID
+    const instuCol = headers.indexOf('cr69d_instucode');
     const genderCol = headers.indexOf('cr69d_gender');
     const activeCol = headers.indexOf('cr69d_studentactive');
-    const balanceCol = headers.indexOf('cr69d_wallectbalance'); // Wallet balance
+    const balanceCol = headers.indexOf('cr69d_wallectbalance');
     const emailCol = headers.indexOf('cr69d_emailaddress');
     const whatsappCol = headers.indexOf('cr69d_whatsapppreferrednumber');
-    const whatsappSubscriberCol = headers.indexOf('cr69d_whatsappsubcriber');
+    const levelCol = headers.indexOf('cr69d_level');
 
-    // NOTE: The user's 'organisation' from login comes from cr69d_organisation (which is Name, not GUID)
-    // However, in the student sheet, we see 'owningbusinessunit' which is a GUID.
-    // Let's check for a name column or use business unit.
-    // Actually, looking at login logic: success returns user.organisation (which is Name).
-    // Let's filter by Name if available or use business unit if we can map it.
-    // For now, I'll filter by a column that matches the organization name.
-    const orgNameCol = headers.indexOf('cr69d_regholdertextex'); // Registered holder name? Or check for organisation column.
+    if (instuCol === -1) {
+        return NextResponse.json({ error: 'Organisation column (cr69d_instucode) not found' }, { status: 500 });
+    }
+
+    const allStudents = rows.slice(1);
     
-    // If 'cr69d_organisation' is missing in student sheet, we might need to map business unit.
-    // Standard LSA pattern: filter by business unit GUID if we have it, or Name.
-    
-    const students = rows.slice(1);
+    // FILTER BY ORGANIZATION
+    const students = allStudents.filter(row => {
+        const studentOrg = String(row[instuCol] || '').trim();
+        return studentOrg === org;
+    });
 
     // Aggregation logic
     const totalStudents = students.length;
@@ -67,16 +66,17 @@ export async function GET(req: Request) {
     let whatsappCount = 0;
     let emailCount = 0;
     let creditBalanceCount = 0;
+    const levelsMap: { [key: string]: number } = {};
 
     students.forEach(student => {
-        // Active Status (TRUE/FALSE strings)
+        // Active Status
         const isActive = String(student[activeCol] || '').toUpperCase() === 'TRUE';
         if (isActive) activeStudents++;
 
         // Gender
         const gender = String(student[genderCol] || '').toLowerCase();
-        if (gender === 'male') maleCount++;
-        else if (gender === 'female') femaleCount++;
+        if (gender === 'male' || gender === 'm') maleCount++;
+        else if (gender === 'female' || gender === 'f') femaleCount++;
 
         // Balance
         const rawBalance = String(student[balanceCol] || '0').replace(/[^0-9.-]+/g, '');
@@ -90,7 +90,18 @@ export async function GET(req: Request) {
         // Communication
         if (String(student[whatsappCol] || '').trim().length > 5) whatsappCount++;
         if (String(student[emailCol] || '').trim().includes('@')) emailCount++;
+
+        // Levels
+        const level = String(student[levelCol] || 'Unknown').trim();
+        if (level) {
+            levelsMap[level] = (levelsMap[level] || 0) + 1;
+        }
     });
+
+    // Sort levels by count
+    const levels = Object.entries(levelsMap)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
 
     const stats = {
         activePercentage: totalStudents ? (activeStudents / totalStudents) * 100 : 0,
@@ -102,7 +113,8 @@ export async function GET(req: Request) {
         totalDebtors: debtorCount,
         whatsappFilled: whatsappCount,
         emailsFilled: emailCount,
-        incompleteProfiles: totalStudents - Math.min(whatsappCount, emailCount)
+        incompleteProfiles: totalStudents - Math.min(whatsappCount, emailCount),
+        levels: levels.slice(0, 10) // Top 10 levels
     };
 
     return NextResponse.json(stats);

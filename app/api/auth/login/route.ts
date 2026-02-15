@@ -30,12 +30,10 @@ export async function POST(req: Request) {
     const sheetTitles = spreadsheet.data.sheets?.map(s => s.properties?.title) || [];
     console.log('Available sheet tabs:', sheetTitles);
 
-    // Try to find the best sheet: 
-    // 1. Exact match for 'cr69d_usertokens'
-    // 2. Case-insensitive match
-    // 3. Just use the first sheet if nothing else matches
-    let targetSheet = sheetTitles.find(t => t === 'cr69d_usertokens') || 
-                      sheetTitles.find(t => t?.toLowerCase() === 'cr69d_usertokens'.toLowerCase()) ||
+    // Simplified sheet selection based on user input
+    let targetSheet = sheetTitles.find(t => t === 'cr69d_usertokens.csv') || 
+                      sheetTitles.find(t => t === 'cr69d_usertokens') ||
+                      sheetTitles.find(t => t?.toLowerCase().includes('usertokens')) ||
                       sheetTitles[0];
 
     if (!targetSheet) {
@@ -49,7 +47,7 @@ export async function POST(req: Request) {
     const range = `'${targetSheet}'!A:ZZ`; // Expanded range to include AW and AY
 
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+      spreadsheetId: process.env.GOOGLE_SHEETS_ID_AUTH,
       range: range,
     });
 
