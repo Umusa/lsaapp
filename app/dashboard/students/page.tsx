@@ -1,17 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, UserPlus, FileDown, MoreHorizontal, Loader2 } from "lucide-react";
+import { 
+    Search, 
+    Plus, 
+    FileDown, 
+    Calendar, 
+    ChevronDown, 
+    RotateCcw,
+    LayoutGrid,
+    Users,
+    ArrowLeft
+} from "lucide-react";
+import Loader from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
 export default function StudentsPage() {
     const [students, setStudents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [userData, setUserData] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedLevel, setSelectedLevel] = useState("All Levels");
+    const [showDebtors, setShowDebtors] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
-            const org = JSON.parse(storedUser).organisation;
+            const parsedUser = JSON.parse(storedUser);
+            setUserData(parsedUser);
+            const org = parsedUser.instuCode || parsedUser.organisation;
             fetchStudents(org);
         }
     }, []);
@@ -29,118 +46,227 @@ export default function StudentsPage() {
         }
     };
 
+    // Group students by level
+    const studentsByLevel = students.reduce((acc: any, student: any) => {
+        const level = student.cr69d_level || "Unknown Level";
+        if (!acc[level]) {
+            acc[level] = {
+                name: level,
+                category: student.cr69d_section || "General", // Assuming section/category logic
+                count: 0,
+                hasDebtors: false
+            };
+        }
+        acc[level].count++;
+        const balance = parseFloat(String(student.cr69d_wallectbalance || '0').replace(/[^0-9.-]+/g, '')) || 0;
+        if (balance > 1) acc[level].hasDebtors = true;
+        return acc;
+    }, {});
+
+    const levelsArray = Object.values(studentsByLevel).filter((level: any) => {
+        const matchesName = level.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesLevel = selectedLevel === "All Levels" || level.name === selectedLevel;
+        const matchesDebtors = !showDebtors || level.hasDebtors;
+        return matchesName && matchesLevel && matchesDebtors;
+    });
+
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-slate-50/50">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                    <p className="text-slate-500 font-bold animate-pulse text-sm tracking-widest uppercase">Loading Student Roster...</p>
-                </div>
-            </div>
-        );
+        return <Loader />;
     }
 
     return (
-        <div className="p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Student Management</h1>
-                    <p className="text-slate-500 text-sm font-medium">Viewing {students.length} students from your organization</p>
+        <div className="flex h-[calc(100vh-64px)] bg-[#F8FAFC]">
+            {/* Sidebar Filters */}
+            <div className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col gap-6 overflow-y-auto">
+                <div className="flex items-center gap-2 text-[#2563eb] mb-2">
+                    <Search className="w-5 h-5" />
+                    <span className="font-bold text-lg">Search</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="h-10 px-4 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-all">
-                        <FileDown className="w-4 h-4" /> Export CSV
-                    </button>
-                    <button className="h-10 px-6 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20">
-                        <UserPlus className="w-4 h-4" /> Add Student
+
+                <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Search Name</label>
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full h-10 px-3 bg-slate-50 border-none rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                placeholder="..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Select Level</label>
+                        <div className="relative">
+                            <select 
+                                value={selectedLevel}
+                                onChange={(e) => setSelectedLevel(e.target.value)}
+                                className="w-full h-10 px-3 bg-slate-50 border-none rounded-lg text-sm outline-none appearance-none cursor-pointer"
+                            >
+                                <option>All Levels</option>
+                                {Object.keys(studentsByLevel).map(lvl => (
+                                    <option key={lvl} value={lvl}>{lvl}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1.5">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Start Date</label>
+                            <div className="h-10 px-2 bg-slate-50 rounded-lg flex items-center justify-between text-[10px] text-slate-600">
+                                <span>Jan 25, 2011</span>
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">End Date</label>
+                            <div className="h-10 px-2 bg-slate-50 rounded-lg flex items-center justify-between text-[10px] text-slate-600">
+                                <span>Feb 15, 2026</span>
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                        <p className="text-[12px] font-black text-slate-800 uppercase tracking-tighter">Status</p>
+                        <div className="relative">
+                            <select className="w-full h-10 px-3 bg-slate-50 border-none rounded-lg text-sm outline-none appearance-none cursor-pointer text-slate-400 italic">
+                                <option>Select status</option>
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2">
+                        <div className="flex items-center justify-between group">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-bold text-slate-600">Debtors</span>
+                                <div className="w-2 h-2 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" />
+                            </div>
+                            <button 
+                                onClick={() => setShowDebtors(!showDebtors)}
+                                className={cn(
+                                    "w-10 h-5 rounded-full transition-all relative flex items-center px-1",
+                                    showDebtors ? "bg-blue-600" : "bg-slate-200"
+                                )}
+                            >
+                                <div className={cn(
+                                    "w-3 h-3 bg-white rounded-full transition-all shadow-sm",
+                                    showDebtors ? "translate-x-5" : "translate-x-0"
+                                )} />
+                            </button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-400">Show debtors only</span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2">
+                            <span className="text-[11px] font-bold text-slate-600">Filter by due date</span>
+                            <button className="w-10 h-5 bg-slate-200 rounded-full relative flex items-center px-1">
+                                <div className="w-3 h-3 bg-white rounded-full shadow-sm" />
+                            </button>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400">Due date filter disabled</span>
+                    </div>
+                </div>
+
+                <div className="mt-auto flex justify-center pt-8">
+                    <button 
+                        onClick={() => {
+                            setSearchQuery("");
+                            setSelectedLevel("All Levels");
+                            setShowDebtors(false);
+                        }}
+                        className="p-3 text-[#2563eb] bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                    >
+                        <RotateCcw className="w-6 h-6" />
                     </button>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input 
-                        type="text" 
-                        placeholder="Search by name, ID or email..." 
-                        className="w-full h-11 pl-10 pr-4 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 rounded-xl text-sm transition-all outline-none"
-                    />
-                </div>
-                <select className="h-11 px-4 bg-slate-50 border-transparent rounded-xl text-sm font-bold text-slate-600 outline-none w-full sm:w-48">
-                    <option>All Sections</option>
-                </select>
-                <select className="h-11 px-4 bg-slate-50 border-transparent rounded-xl text-sm font-bold text-slate-600 outline-none w-full sm:w-48">
-                    <option>All Levels</option>
-                </select>
-            </div>
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col min-w-0">
+                <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button className="p-2 -ml-2 text-slate-400 hover:text-slate-600 bg-slate-50 border border-slate-200 rounded-lg">
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
+                        <h1 className="text-xl font-black text-slate-800 tracking-tight">Student List</h1>
+                    </div>
+                    
+                    <div className="flex flex-col items-end">
+                        <p className="text-[12px] font-bold text-slate-800">
+                            Support ({userData?.organisation || "School"})
+                        </p>
+                        <p className="text-[11px] text-blue-600 font-bold">15 Feb 2026</p>
+                    </div>
+                </header>
 
-            {/* Table */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-bottom duration-500">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Student Name</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Gender</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Balance</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {students.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-20 text-center">
-                                        <p className="text-slate-400 font-bold text-sm">No student records found for this organization.</p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                students.map((student, i) => (
-                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
-                                                    {(student.cr69d_title || 'S').charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-800">{student.cr69d_title || 'Unknown Student'}</p>
-                                                    <p className="text-[10px] text-slate-500 font-medium">{student.cr69d_emailaddress || 'No email registered'}</p>
+                <main className="flex-1 p-6 overflow-y-auto">
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col h-full min-h-[600px]">
+                        {/* Toolbar */}
+                        <div className="p-4 border-b border-slate-50 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
+                                    <Plus className="w-5 h-5" />
+                                </button>
+                                <div className="h-6 w-[1px] bg-slate-100 mx-2" />
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                <button className="h-10 px-6 bg-[#F8FAFC] border border-slate-100 text-[#1E293B] text-[11px] font-black rounded-xl flex items-center gap-2 hover:bg-white transition-all shadow-sm">
+                                    <FileDown className="w-4 h-4" /> Download (CSV)
+                                </button>
+                                <button className="w-10 h-10 rounded-xl bg-[#2563eb] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all">
+                                    <Search className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Grid */}
+                        <div className="flex-1 p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-max">
+                                {levelsArray.length === 0 ? (
+                                    <div className="col-span-full py-32 flex flex-col items-center gap-4">
+                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+                                            <Users className="w-10 h-10 text-slate-200" />
+                                        </div>
+                                        <p className="text-slate-400 font-bold text-sm">No sections found matching your filters.</p>
+                                    </div>
+                                ) : (
+                                    levelsArray.map((level: any, i) => (
+                                        <div 
+                                            key={i} 
+                                            className="group relative h-[100px] bg-white rounded-2xl border border-slate-100 p-5 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 cursor-pointer overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            
+                                            <div className="relative z-10 flex flex-col min-w-0">
+                                                <h3 className="text-[15px] font-extrabold text-[#1E293B] truncate leading-tight mb-1 group-hover:text-blue-700 transition-colors">{level.name}</h3>
+                                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{level.category}</p>
+                                            </div>
+
+                                            <div className="relative z-10 flex items-center gap-3">
+                                                {level.hasDebtors && (
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                                )}
+                                                <div className="w-10 h-10 rounded-full bg-[#E2E8F0]/30 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-[#475569] font-black text-sm transition-all shadow-inner">
+                                                    {level.count}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-full uppercase tracking-tighter">
-                                                {student.cr69d_gender || '-'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={cn(
-                                                "text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest",
-                                                String(student.cr69d_studentactive).toUpperCase() === 'TRUE'
-                                                    ? "bg-emerald-100 text-emerald-700"
-                                                    : "bg-slate-100 text-slate-500"
-                                            )}>
-                                                {String(student.cr69d_studentactive).toUpperCase() === 'TRUE' ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`text-sm font-bold ${parseFloat(String(student.cr69d_wallectbalance || '0').replace(/[^0-9.-]+/g, '')) > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
-                                                ₦{parseFloat(String(student.cr69d_wallectbalance || '0').replace(/[^0-9.-]+/g, '')).toLocaleString()}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
-                                                <MoreHorizontal className="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     );
 }
+

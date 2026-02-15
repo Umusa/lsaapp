@@ -43,6 +43,8 @@ export async function GET(req: Request) {
     const emailCol = headers.indexOf('cr69d_emailaddress');
     const whatsappCol = headers.indexOf('cr69d_whatsapppreferrednumber');
     const levelCol = headers.indexOf('cr69d_level');
+    const busCol = headers.indexOf('cr69d_bus_subcriber');
+    const smsCol = headers.indexOf('cr69d_sms_subscriber');
 
     if (instuCol === -1) {
         return NextResponse.json({ error: 'Organisation column (cr69d_instucode) not found' }, { status: 500 });
@@ -50,7 +52,7 @@ export async function GET(req: Request) {
 
     const allStudents = rows.slice(1);
     
-    // FILTER BY ORGANIZATION
+    // FILTER BY INSTUCODE
     const students = allStudents.filter(row => {
         const studentOrg = String(row[instuCol] || '').trim();
         return studentOrg === org;
@@ -58,38 +60,64 @@ export async function GET(req: Request) {
 
     // Aggregation logic
     const totalStudents = students.length;
-    let activeStudents = 0;
+    let activeStudentsCount = 0;
     let maleCount = 0;
     let femaleCount = 0;
-    let clearedCount = 0;
-    let debtorCount = 0;
+    
+    // For ratio card: Cleared (< 1) vs Debtors (> 1)
+    let ratioCleared = 0;
+    let ratioDebtors = 0;
+
+    // For specific count cards
+    let clearedBalanceCount = 0; // -1 < balance < 1
+    let creditBalanceCount = 0;  // balance < 0
+    let totalDebtorsCount = 0;   // balance > 0
+    
+    let inactiveDebtSum = 0;
+    
     let whatsappCount = 0;
     let emailCount = 0;
-    let creditBalanceCount = 0;
+    let busSubscribers = 0;
+    let smsSubscribers = 0;
     const levelsMap: { [key: string]: number } = {};
 
     students.forEach(student => {
         // Active Status
         const isActive = String(student[activeCol] || '').toUpperCase() === 'TRUE';
-        if (isActive) activeStudents++;
-
-        // Gender
-        const gender = String(student[genderCol] || '').toLowerCase();
-        if (gender === 'male' || gender === 'm') maleCount++;
-        else if (gender === 'female' || gender === 'f') femaleCount++;
+        if (isActive) activeStudentsCount++;
 
         // Balance
         const rawBalance = String(student[balanceCol] || '0').replace(/[^0-9.-]+/g, '');
         const balance = parseFloat(rawBalance) || 0;
+
+        // Gender (PowerFX: Filter Active Male/Female)
+        const gender = String(student[genderCol] || '').toLowerCase();
+        if (isActive) {
+            if (gender === 'male' || gender === 'm') maleCount++;
+            else if (gender === 'female' || gender === 'f') femaleCount++;
+        }
+
+        // Ratio logic (PowerFX: < 1 vs > 1)
+        if (balance < 1) ratioCleared++;
+        if (balance > 1) ratioDebtors++;
         
-        if (balance <= 0) clearedCount++;
-        else debtorCount++;
-        
+        // Exact counts (PowerFX)
+        if (balance < 1 && balance > -1) clearedBalanceCount++;
         if (balance < 0) creditBalanceCount++;
+        if (balance > 0) totalDebtorsCount++;
+
+        // Inactive Debt Sum (PowerFX: Sum if Inactive and Balance > 0)
+        if (!isActive && balance > 0) {
+            inactiveDebtSum += balance;
+        }
 
         // Communication
         if (String(student[whatsappCol] || '').trim().length > 5) whatsappCount++;
         if (String(student[emailCol] || '').trim().includes('@')) emailCount++;
+
+        // Subscribers
+        if (busCol !== -1 && String(student[busCol] || '').trim().toUpperCase() === 'TRUE') busSubscribers++;
+        if (smsCol !== -1 && String(student[smsCol] || '').trim().toUpperCase() === 'TRUE') smsSubscribers++;
 
         // Levels
         const level = String(student[levelCol] || 'Unknown').trim();
@@ -104,15 +132,18 @@ export async function GET(req: Request) {
         .sort((a, b) => b.count - a.count);
 
     const stats = {
-        activePercentage: totalStudents ? (activeStudents / totalStudents) * 100 : 0,
+        activePercentage: totalStudents ? (activeStudentsCount / totalStudents) * 100 : 0,
         genderRatio: { male: maleCount, female: femaleCount },
-        clearedVsDebtors: { cleared: clearedCount, debtors: debtorCount },
+        clearedVsDebtors: { cleared: ratioCleared, debtors: ratioDebtors },
         totalStudents,
-        clearedBalanceCount: clearedCount,
+        clearedBalanceCount,
         creditBalanceCount,
-        totalDebtors: debtorCount,
+        totalDebtors: totalDebtorsCount,
+        inactiveDebtSum,
         whatsappFilled: whatsappCount,
         emailsFilled: emailCount,
+        busSubscribers,
+        smsSubscribers,
         incompleteProfiles: totalStudents - Math.min(whatsappCount, emailCount),
         levels: levels.slice(0, 10) // Top 10 levels
     };

@@ -23,7 +23,7 @@ async function sampleData() {
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    const spreadsheetId = process.env.GOOGLE_SHEETS_ID_STUDENTS;
     const targetSheet = 'cr69d_studentses.csv';
 
     console.log('Fetching data from sheet...');
@@ -41,13 +41,14 @@ async function sampleData() {
     const headers = rows[0].map(h => String(h || '').trim());
     console.log('Headers found:', headers.length);
 
-    const orgCol = headers.indexOf('cr69d_organisation');
+    const instuCol = headers.indexOf('cr69d_instucode');
+    const levelCol = headers.indexOf('cr69d_level');
     const genderCol = headers.indexOf('cr69d_gender');
     
-    console.log('Indexes:', { orgCol, genderCol });
+    console.log('Indexes:', { instuCol, levelCol, genderCol });
 
-    rows.slice(0, 5).forEach((row, i) => {
-        console.log(`Row ${i} Organization: "${row[orgCol]}" | Gender: "${row[genderCol]}" | Title: "${row[headers.indexOf('cr69d_title')]}"`);
+    rows.slice(0, 10).forEach((row, i) => {
+        console.log(`Row ${i} InstuCode: "${row[instuCol]}" | Level: "${row[levelCol]}" | Gender: "${row[genderCol]}" | Title: "${row[headers.indexOf('cr69d_title')]}"`);
     });
 
   } catch (error) {

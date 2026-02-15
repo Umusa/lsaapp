@@ -41,7 +41,7 @@ export async function GET(req: Request) {
         return student;
     });
 
-    // FILTER BY ORGANIZATION if provided
+    // FILTER BY ORGANIZATION (instuCode) if provided
     if (org && instuCol !== -1) {
         students = students.filter(s => String(s.cr69d_instucode || '').trim() === org);
     }

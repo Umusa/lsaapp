@@ -4,17 +4,17 @@ import { ThreeCircles } from "react-loader-spinner";
 
 const Loader = () => {
     return (
-        <div className="fixed inset-0 z-600 m-0 grid size-full place-items-center space-y-0 bg-black/50 p-0">
-            <div className="grid size-22 place-items-center rounded-full bg-white">
+        <div className="fixed inset-0 z-[9999] m-0 grid size-full place-items-center bg-slate-900/50 backdrop-blur-sm p-0">
+            <div className="grid size-28 place-items-center rounded-2xl bg-white shadow-2xl">
                 <ThreeCircles
                     visible={true}
-                    height="48"
-                    width="48"
-                    color="#4fa94d"
+                    height="64"
+                    width="64"
+                    color="#2563eb"
                     ariaLabel="three-circles-loading"
-                    innerCircleColor="#2D2D2D"
-                    middleCircleColor="#D9D9D9"
-                    outerCircleColor="#D9D9D9"
+                    innerCircleColor="#3b82f6"
+                    middleCircleColor="#93c5fd"
+                    outerCircleColor="#2563eb"
                     wrapperStyle={{}}
                     wrapperClass=""
                 />

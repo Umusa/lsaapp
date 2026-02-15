@@ -1,10 +1,17 @@
 "use client";
 
-import { Bell, Search, Settings, HelpCircle, User, Menu } from "lucide-react";
+import { Bell, Search, Settings, HelpCircle, User, Menu, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const TopNav = ({ onMenuClick }: { onMenuClick: () => void }) => {
     const [user, setUser] = useState<any>(null);
+    const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem("user");
+        router.push("/login");
+    };
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -66,8 +73,17 @@ const TopNav = ({ onMenuClick }: { onMenuClick: () => void }) => {
                             {user?.organisation?.split(' ')[0] || "LSA"} School
                         </p>
                     </div>
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center shadow-inner">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center shadow-inner group relative">
                         <User className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                        <button 
+                            onClick={handleLogout}
+                            className="absolute -bottom-12 right-0 bg-white border border-slate-200 rounded-lg shadow-lg py-2 px-4 text-xs font-bold text-red-600 whitespace-nowrap hidden group-hover:block hover:bg-red-50 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <LogOut className="w-3 h-3" />
+                                Sign Out
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>

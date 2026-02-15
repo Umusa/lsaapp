@@ -124,9 +124,11 @@ export async function POST(req: Request) {
     const currentHeaders = rows[headerRowIndex].map((h: any) => String(h || '').trim());
     const roleColIndex = currentHeaders.indexOf('cr69d_role');
     const orgColIndex = currentHeaders.indexOf('cr69d_organisation');
+    const instuColIndex = currentHeaders.indexOf('cr69d_instucode');
 
     if (roleColIndex !== -1) user.role = userRow[roleColIndex];
     if (orgColIndex !== -1) user.organisation = userRow[orgColIndex];
+    if (instuColIndex !== -1) user.instuCode = userRow[instuColIndex];
 
     return NextResponse.json({
       message: 'Login successful',

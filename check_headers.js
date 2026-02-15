@@ -16,7 +16,7 @@ async function checkHeaders() {
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    const spreadsheetId = process.env.GOOGLE_SHEETS_ID_STUDENTS;
 
     console.log('Fetching spreadsheet metadata...');
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   Users, 
@@ -64,7 +64,13 @@ const menuGroups = [
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -134,7 +140,10 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
       {/* User Profile Footer */}
       <div className="p-4 mt-auto border-t border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 transition-colors cursor-pointer group">
+        <div 
+          onClick={handleLogout}
+          className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 transition-colors cursor-pointer group"
+        >
           <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-sm border border-blue-500/20">
             {user?.username?.charAt(0).toUpperCase() || "A"}
           </div>

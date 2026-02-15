@@ -15,6 +15,7 @@ import {
   Search,
   Loader2
 } from "lucide-react";
+import Loader from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
 const CircularProgress = ({ percentage, color, label, centerText, subText }: any) => {
@@ -82,19 +83,13 @@ const DashboardHome = () => {
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      fetchStats(parsedUser.organisation);
+      const filterId = parsedUser.instuCode || parsedUser.organisation;
+      fetchStats(filterId);
     }
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-50/50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-          <p className="text-slate-500 font-bold animate-pulse text-sm tracking-widest uppercase">Fetching Live Data...</p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
@@ -147,15 +142,20 @@ const DashboardHome = () => {
             />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={(stats?.clearedBalanceCount / stats?.totalStudents) * 100 || 0} color="text-blue-600" centerText={`${stats?.clearedBalanceCount || 0}/${stats?.totalDebtors || 0}`} label="Cleared" />
+            <CircularProgress 
+              percentage={stats?.totalStudents ? (stats.clearedVsDebtors?.cleared / stats.totalStudents) * 100 : 0} 
+              color="text-blue-600" 
+              centerText={`${stats?.clearedVsDebtors?.cleared || 0}/${stats?.clearedVsDebtors?.debtors || 0}`} 
+              label="Cleared" 
+            />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={0} color="text-slate-300" centerText="-" label="Payment" />
+            <CircularProgress percentage={stats?.totalStudents ? (stats.busSubscribers / stats.totalStudents) * 100 : 0} color="text-indigo-500" centerText={stats?.busSubscribers || 0} label="Bus" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
-        
+
         {/* Left Stats Section */}
         <div className="xl:col-span-2 space-y-6 sm:space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-white p-6 sm:p-8 rounded-2xl border border-slate-100">
@@ -169,7 +169,7 @@ const DashboardHome = () => {
                 </div>
                 <div className="space-y-1">
                     <p className="text-2xl sm:text-3xl font-extrabold text-orange-500">{stats?.totalDebtors || 0}</p>
-                    <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Total debtors</p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-tight">TOTAL DEBTORS</p>
                 </div>
                 <div className="col-span-full pt-4 border-t border-slate-50">
                     <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium italic">{stats?.incompleteProfiles || 0} students with incomplete profiles</p>
@@ -193,11 +193,10 @@ const DashboardHome = () => {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
                     <div className="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white border-4 border-rose-200">
                         <div className="flex flex-col items-center">
-                            <span className="text-2xl font-bold">{stats?.totalStudents - (stats?.totalStudents * (stats?.activePercentage / 100)) || 0}</span>
-                            <span className="text-[9px] font-bold">N</span>
+                            <span className="text-xl font-bold">₦{(stats?.inactiveDebtSum || 0).toLocaleString()}</span>
                         </div>
                     </div>
-                    <p className="text-[11px] text-rose-800 font-extrabold uppercase text-center tracking-wider">Inactive Students</p>
+                    <p className="text-[11px] text-rose-800 font-extrabold uppercase text-center tracking-wider px-2">Inactive Students (Debt)</p>
                 </div>
             </div>
         </div>
