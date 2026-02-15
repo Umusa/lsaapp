@@ -13,17 +13,14 @@ export async function GET(req: Request) {
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').replace(/"/g, ''),
       },
       scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
-
-    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
-    const sheetTitles = spreadsheet.data.sheets?.map(s => s.properties?.title) || [];
-    const targetSheet = sheetTitles.find(t => t?.toLowerCase().includes('studentt')) || 'studentt';
+    const targetSheet = 'cr69d_studentses.csv';
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -35,28 +32,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ students: [] });
     }
 
-    // Header Discovery
-    let headerRowIndex = -1;
-    let headers: string[] = [];
-    for (let i = 0; i < Math.min(rows.length, 20); i++) {
-        const currentRow = rows[i].map((h: any) => String(h || '').trim());
-        if (currentRow.includes('cr69d_organisation')) {
-            headers = currentRow;
-            headerRowIndex = i;
-            break;
-        }
-    }
-
-    if (headerRowIndex === -1) {
-        headers = rows[0].map((h: any) => String(h || '').trim());
-        headerRowIndex = 0;
-    }
-
+    const headers = rows[0].map((h: any) => String(h || '').trim());
     const orgCol = headers.indexOf('cr69d_organisation');
 
-    // Filter and map to objects
-    const students = rows.slice(headerRowIndex + 1)
-        .filter(row => String(row[orgCol] || '').trim() === org)
+    const students = rows.slice(1)
+        .filter(row => String(row[orgCol] || '').trim().toLowerCase() === org.toLowerCase())
         .map(row => {
             const student: any = {};
             headers.forEach((header, index) => {
@@ -71,6 +51,6 @@ export async function GET(req: Request) {
 
   } catch (error: any) {
     console.error('Students API Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

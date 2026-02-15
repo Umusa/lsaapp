@@ -12,7 +12,8 @@ import {
   ArrowDownRight,
   Plus,
   RefreshCw,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,13 +60,42 @@ const CircularProgress = ({ percentage, color, label, centerText, subText }: any
 
 const DashboardHome = () => {
   const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchStats = async (org: string) => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/dashboard/stats?org=${encodeURIComponent(org)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setStats(data);
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      fetchStats(parsedUser.organisation);
     }
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50/50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+          <p className="text-slate-500 font-bold animate-pulse text-sm tracking-widest uppercase">Fetching Live Data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
@@ -90,7 +120,10 @@ const DashboardHome = () => {
 
         {/* Floating Action Buttons */}
         <div className="hidden sm:flex absolute bottom-6 right-8 gap-3">
-          <button className="h-10 px-4 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl backdrop-blur-md transition-all flex items-center gap-2 border border-white/10">
+          <button 
+            onClick={() => user && fetchStats(user.organisation)}
+            className="h-10 px-4 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl backdrop-blur-md transition-all flex items-center gap-2 border border-white/10"
+          >
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
           <button className="h-10 px-6 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
@@ -102,13 +135,13 @@ const DashboardHome = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={97.7} color="text-emerald-500" centerText="97%" label="Active" />
+            <CircularProgress percentage={stats?.activePercentage || 0} color="text-emerald-500" centerText={`${Math.round(stats?.activePercentage || 0)}%`} label="Active" />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={65} color="text-pink-500" centerText="247/169" label="Gender" />
+            <CircularProgress percentage={50} color="text-pink-500" centerText={`${stats?.genderRatio?.male || 0}/${stats?.genderRatio?.female || 0}`} label="Gender" />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={80} color="text-blue-600" centerText="219/197" label="Cleared" />
+            <CircularProgress percentage={(stats?.clearedBalanceCount / stats?.totalStudents) * 100 || 0} color="text-blue-600" centerText={`${stats?.clearedBalanceCount || 0}/${stats?.totalDebtors || 0}`} label="Cleared" />
         </div>
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
             <CircularProgress percentage={0} color="text-slate-300" centerText="-" label="Payment" />
@@ -121,32 +154,32 @@ const DashboardHome = () => {
         <div className="xl:col-span-2 space-y-6 sm:space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-white p-6 sm:p-8 rounded-2xl border border-slate-100">
                 <div className="space-y-1">
-                    <p className="text-2xl sm:text-3xl font-extrabold text-slate-800">211</p>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-slate-800">{stats?.clearedBalanceCount || 0}</p>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Total students with <br className="hidden sm:block"/>cleared balance</p>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-2xl sm:text-3xl font-extrabold text-emerald-500">8</p>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-emerald-500">{stats?.creditBalanceCount || 0}</p>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Total students with <br className="hidden sm:block"/>credit balances</p>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-2xl sm:text-3xl font-extrabold text-orange-500">197</p>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-orange-500">{stats?.totalDebtors || 0}</p>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Total debtors</p>
                 </div>
                 <div className="col-span-full pt-4 border-t border-slate-50">
-                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium italic">253 students with incomplete profiles</p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium italic">{stats?.incompleteProfiles || 0} students with incomplete profiles</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center border-4 border-emerald-400">
-                        <p className="text-xl font-bold text-slate-800">130</p>
+                        <p className="text-xl font-bold text-slate-800">{stats?.whatsappFilled || 0}</p>
                     </div>
                     <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-wider">Student with whatsapp <br/>number filled</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center border-4 border-blue-400">
-                        <p className="text-xl font-bold text-slate-800">189</p>
+                        <p className="text-xl font-bold text-slate-800">{stats?.emailsFilled || 0}</p>
                     </div>
                     <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-wider">Student with emails <br/>filled</p>
                 </div>
@@ -154,7 +187,7 @@ const DashboardHome = () => {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
                     <div className="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white border-4 border-rose-200">
                         <div className="flex flex-col items-center">
-                            <span className="text-2xl font-bold">0</span>
+                            <span className="text-2xl font-bold">{stats?.totalStudents - (stats?.totalStudents * (stats?.activePercentage / 100)) || 0}</span>
                             <span className="text-[9px] font-bold">N</span>
                         </div>
                     </div>
