@@ -15,7 +15,7 @@ async function listTitles() {
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    const spreadsheetId = process.env.GOOGLE_SHEETS_ID_STUDENTS;
 
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
     

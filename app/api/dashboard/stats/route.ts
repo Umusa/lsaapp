@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+    const spreadsheetId = process.env.GOOGLE_SHEETS_ID_STUDENTS;
 
     // Use the verified tab name
     const targetSheet = 'cr69d_studentses.csv';

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     
     // First, let's get the spreadsheet details to find the correct tab name
     const spreadsheet = await sheets.spreadsheets.get({
-      spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+      spreadsheetId: process.env.GOOGLE_SHEETS_ID_AUTH,
     });
 
     const sheetTitles = spreadsheet.data.sheets?.map(s => s.properties?.title) || [];
