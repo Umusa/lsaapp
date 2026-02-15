@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
     Search, 
     Plus, 
@@ -16,6 +17,7 @@ import Loader from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
 export default function StudentsPage() {
+    const router = useRouter();
     const [students, setStudents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [userData, setUserData] = useState<any>(null);
@@ -241,6 +243,7 @@ export default function StudentsPage() {
                                     levelsArray.map((level: any, i) => (
                                         <div 
                                             key={i} 
+                                            onClick={() => router.push(`/dashboard/students/${encodeURIComponent(level.name)}`)}
                                             className="group relative h-[100px] bg-white rounded-2xl border border-slate-100 p-5 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 cursor-pointer overflow-hidden"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
