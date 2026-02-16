@@ -62,37 +62,6 @@ const LoginForm = ({ onSubmit, isPending, schoolColor, setSchoolColor }: LoginFo
                         />
                     </div>
 
-                    <div className="space-y-3">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5">School Color Template</label>
-                        <div className="grid grid-cols-6 gap-2">
-                            {[
-                                { name: "Blue", color: "#2563eb" },
-                                { name: "Purple", color: "#7c3aed" },
-                                { name: "Emerald", color: "#059669" },
-                                { name: "Rose", color: "#e11d48" },
-                                { name: "Amber", color: "#d97706" },
-                                { name: "Slate", color: "#475569" },
-                            ].map((theme) => (
-                                <button
-                                    key={theme.color}
-                                    type="button"
-                                    onClick={() => setSchoolColor?.(theme.color)}
-                                    className={cn(
-                                        "h-10 rounded-lg border-2 transition-all flex items-center justify-center",
-                                        schoolColor === theme.color 
-                                            ? "border-slate-900 scale-105 shadow-md" 
-                                            : "border-transparent hover:scale-105"
-                                    )}
-                                    style={{ backgroundColor: theme.color }}
-                                    title={theme.name}
-                                >
-                                    {schoolColor === theme.color && (
-                                        <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
 
                     <div className="flex items-center justify-between py-1">
                         <div className="flex items-center space-x-3">

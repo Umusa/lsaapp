@@ -185,26 +185,32 @@ const DashboardHome = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center border-4 border-emerald-400">
-                        <p className="text-xl font-bold text-slate-800">{stats?.whatsappFilled || 0}</p>
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-wider">Student with whatsapp <br/>number filled</p>
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center border-4 border-blue-400">
-                        <p className="text-xl font-bold text-slate-800">{stats?.emailsFilled || 0}</p>
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-wider">Student with emails <br/>filled</p>
-                </div>
-                <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 shadow-sm flex flex-col items-center gap-4 relative overflow-hidden">
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
-                    <div className="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white border-4 border-rose-200">
-                        <div className="flex flex-col items-center">
-                            <span className="text-xl font-bold">₦{(stats?.inactiveDebtSum || 0).toLocaleString()}</span>
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-3 group hover:border-emerald-200 transition-all">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                             <MessageSquare className="w-4 h-4 text-emerald-600" />
                         </div>
+                        <p className="text-2xl font-black text-slate-800">{stats?.whatsappFilled || 0}</p>
                     </div>
-                    <p className="text-[11px] text-rose-800 font-extrabold uppercase text-center tracking-wider px-2">Inactive Students (Debt)</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-wider">WhatsApp <br/>Numbers</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-3 group hover:border-blue-200 transition-all">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+                             <Mail className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <p className="text-2xl font-black text-slate-800">{stats?.emailsFilled || 0}</p>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-wider">Email <br/>Addresses</p>
+                </div>
+                <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 shadow-sm flex flex-col items-center justify-center gap-3 relative overflow-hidden group hover:bg-rose-100 transition-all">
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                    <div className="flex flex-col items-center gap-1">
+                        <span className="text-2xl font-black text-rose-700 tracking-tighter">
+                            ₦{(stats?.inactiveDebtSum || 0).toLocaleString()}
+                        </span>
+                        <p className="text-[11px] text-rose-800 font-extrabold uppercase text-center tracking-wider px-2">Inactive Debt</p>
+                    </div>
                 </div>
             </div>
         </div>

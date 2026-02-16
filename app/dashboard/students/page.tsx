@@ -205,7 +205,7 @@ export default function StudentsPage() {
                 </header>
 
                 <main className="flex-1 p-6 overflow-y-auto">
-                    <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col h-full min-h-[600px]">
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col h-full min-h-[1200px]">
                         {/* Toolbar */}
                         <div className="p-4 border-b border-slate-50 flex items-center justify-between">
                             <div className="flex items-center gap-2">
