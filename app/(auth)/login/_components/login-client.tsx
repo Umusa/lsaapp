@@ -9,6 +9,7 @@ import Loader from "@/components/ui/loader";
 
 const LoginClient = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [schoolColor, setSchoolColor] = useState("#2563eb");
   const router = useRouter();
 
   const handleSubmit = async (data: any) => {
@@ -29,8 +30,9 @@ const LoginClient = () => {
       }
 
       console.log("Login successful:", result);
-      // Store user data for the dashboard
+      // Store user data and theme for the dashboard
       localStorage.setItem("user", JSON.stringify(result.user));
+      localStorage.setItem("school_theme", data.schoolColor || "#2563eb");
       router.push("/dashboard/home");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -53,6 +55,8 @@ const LoginClient = () => {
                     <LoginForm
                         onSubmit={handleSubmit}
                         isPending={isLoading}
+                        schoolColor={schoolColor}
+                        setSchoolColor={setSchoolColor}
                     />
                     <p className="text-center text-sm mt-8">
                         (C) 2025. LSA SCHOOL MANAGEMENT. All Rights Reserved.

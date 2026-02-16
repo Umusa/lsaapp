@@ -19,7 +19,10 @@ import {
   School, 
   Key,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -62,7 +65,12 @@ const menuGroups = [
   }
 ];
 
-const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const Sidebar = ({ isOpen, isCollapsed, onToggleCollapse, onClose }: { 
+  isOpen: boolean; 
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  onClose: () => void 
+}) => {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -81,19 +89,28 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
   return (
     <aside className={cn(
-      "w-72 h-screen bg-[#1E293B] text-slate-300 flex flex-col border-r border-slate-800 shadow-2xl fixed top-0 z-50 transition-all duration-300 lg:left-0",
-      isOpen ? "left-0" : "-left-72"
+      "h-screen bg-[#1E293B] text-slate-300 flex flex-col border-r border-slate-800 shadow-2xl fixed top-0 z-50 transition-all duration-300 lg:left-0",
+      isOpen ? "left-0" : "-left-72",
+      isCollapsed ? "w-20" : "w-72"
     )}>
+      {/* Dotted Pattern Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full opacity-[0.15] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+
       {/* Logo Area */}
-      <div className="p-6 flex items-center justify-between border-b border-slate-800/50">
+      <div className={cn(
+        "p-6 flex items-center border-b border-slate-800/50 relative z-10",
+        isCollapsed ? "justify-center" : "justify-between"
+      )}>
         <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
             <School className="text-white w-6 h-6" />
             </div>
-            <div>
-            <h1 className="text-white font-bold text-lg tracking-tight">LSA SCHOOL</h1>
-            <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Management</p>
-            </div>
+            {!isCollapsed && (
+              <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                <h1 className="text-white font-bold text-lg tracking-tight">LSA SCHOOL</h1>
+                <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Management</p>
+              </div>
+            )}
         </div>
         <button 
           onClick={onClose}
@@ -101,13 +118,37 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
         >
           <ChevronRight className="w-6 h-6 rotate-180" />
         </button>
+        
+        {!isCollapsed && (
+          <button 
+            onClick={onToggleCollapse}
+            className="hidden lg:flex p-1.5 text-slate-500 hover:text-white bg-slate-800/50 border border-slate-700/50 rounded-lg transition-all"
+          >
+            <ChevronsLeft className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
+      {isCollapsed && (
+        <div className="py-4 flex justify-center border-b border-slate-800/50 relative z-10">
+          <button 
+            onClick={onToggleCollapse}
+            className="p-1.5 text-slate-500 hover:text-white bg-slate-800/50 border border-slate-700/50 rounded-lg transition-all"
+          >
+            <ChevronsRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Nav Items */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-8">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-8 relative z-10">
         {menuGroups.map((group, idx) => (
           <div key={idx} className="space-y-2">
-            <h3 className="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">{group.title}</h3>
+            {!isCollapsed && (
+              <h3 className="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest animate-in fade-in duration-500">
+                {group.title}
+              </h3>
+            )}
             <div className="space-y-1">
               {group.items.map((item) => {
                 const isActive = pathname === item.href;
@@ -115,20 +156,25 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                   <Link
                     key={item.href}
                     href={item.href}
+                    title={isCollapsed ? item.name : ""}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group relative",
+                      "flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition-all group relative",
                       isActive 
-                        ? "bg-blue-600/10 text-blue-400 font-semibold" 
-                        : "hover:bg-slate-800 hover:text-white"
+                        ? "bg-[var(--primary-soft)] text-[var(--primary)] font-semibold" 
+                        : "hover:bg-slate-800/80 hover:text-white"
                     )}
                   >
                     <item.icon className={cn(
-                      "w-[18px] h-[18px] transition-colors",
-                      isActive ? "text-blue-400" : "text-slate-500 group-hover:text-blue-400"
+                      "w-[18px] h-[18px] transition-colors shrink-0",
+                      isActive ? "text-[var(--primary)]" : "text-slate-500 group-hover:text-[var(--primary)]"
                     )} />
-                    <span className="text-[13.5px]">{item.name}</span>
+                    {!isCollapsed && (
+                      <span className="text-[13.5px] truncate animate-in fade-in slide-in-from-left-2 duration-300">
+                        {item.name}
+                      </span>
+                    )}
                     {isActive && (
-                      <div className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full" />
+                      <div className="absolute left-0 w-1 h-6 bg-[var(--primary)] rounded-r-full shadow-[0_0_8px_var(--primary)]" />
                     )}
                   </Link>
                 );
@@ -139,21 +185,28 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
       </div>
 
       {/* User Profile Footer */}
-      <div className="p-4 mt-auto border-t border-slate-800 bg-slate-900/50">
+      <div className="p-4 mt-auto border-t border-slate-800 bg-slate-900/50 relative z-10">
         <div 
           onClick={handleLogout}
-          className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 transition-colors cursor-pointer group"
+          className={cn(
+            "flex items-center gap-3 p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 transition-colors cursor-pointer group",
+            isCollapsed && "justify-center"
+          )}
         >
-          <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-sm border border-blue-500/20">
+          <div className="w-9 h-9 rounded-full bg-[var(--primary-soft)] flex items-center justify-center text-[var(--primary)] font-bold text-sm border border-[var(--primary)]/20 shrink-0">
             {user?.username?.charAt(0).toUpperCase() || "A"}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-white truncate">{user?.username || "Agent"}</p>
-            <p className="text-[10px] text-slate-500 font-medium truncate uppercase tracking-tighter">
-              {user?.role || "Administrator"}
-            </p>
-          </div>
-          <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0 animate-in fade-in duration-300">
+              <p className="text-xs font-bold text-white truncate">{user?.username || "Agent"}</p>
+              <p className="text-[10px] text-slate-500 font-medium truncate uppercase tracking-tighter">
+                {user?.role || "Administrator"}
+              </p>
+            </div>
+          )}
+          {!isCollapsed && (
+            <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors shrink-0" />
+          )}
         </div>
       </div>
 

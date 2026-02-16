@@ -1,5 +1,5 @@
-import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { getStudentRows } from '@/lib/sheets';
 
 export async function GET(req: Request) {
   try {
@@ -10,24 +10,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Organisation is required' }, { status: 400 });
     }
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').replace(/"/g, ''),
-      },
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    });
-
-    const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SHEETS_ID_STUDENTS;
-    const targetSheet = 'cr69d_studentses.csv';
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `'${targetSheet}'!A:ZZ`,
-    });
-
-    const rows = response.data.values;
+    const rows = await getStudentRows();
     if (!rows || rows.length === 0) {
       return NextResponse.json({ error: 'No student data found' }, { status: 404 });
     }
@@ -39,7 +22,7 @@ export async function GET(req: Request) {
     const instuCol = headers.indexOf('cr69d_instucode');
     const genderCol = headers.indexOf('cr69d_gender');
     const activeCol = headers.indexOf('cr69d_studentactive');
-    const balanceCol = headers.indexOf('cr69d_wallectbalance');
+    const balanceCol = headers.indexOf('cr69d_totaloutstanding');
     const emailCol = headers.indexOf('cr69d_emailaddress');
     const whatsappCol = headers.indexOf('cr69d_whatsapppreferrednumber');
     const levelCol = headers.indexOf('cr69d_level');

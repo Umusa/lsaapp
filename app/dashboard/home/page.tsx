@@ -88,10 +88,6 @@ const DashboardHome = () => {
     }
   }, []);
 
-  if (isLoading) {
-    return <Loader />;
-  }
-
   return (
     <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
       
@@ -129,28 +125,40 @@ const DashboardHome = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={stats?.activePercentage || 0} color="text-emerald-500" centerText={`${Math.round(stats?.activePercentage || 0)}%`} label="Active" />
+        <div className="bg-blue-50/30 p-4 sm:p-6 rounded-2xl border border-blue-100/50 shadow-sm flex flex-col items-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #2563eb 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+            <div className="relative z-10">
+                <CircularProgress percentage={stats?.activePercentage || 0} color="text-emerald-500" centerText={`${Math.round(stats?.activePercentage || 0)}%`} label="Active" />
+            </div>
         </div>
-        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress 
-              percentage={stats?.totalStudents ? (stats?.genderRatio?.male / stats?.totalStudents) * 100 : 0} 
-              color="text-pink-500" 
-              centerText={`${stats?.genderRatio?.male || 0}/${stats?.genderRatio?.female || 0}`} 
-              label="Gender" 
-              subText="M/F"
-            />
+        <div className="bg-blue-50/30 p-4 sm:p-6 rounded-2xl border border-blue-100/50 shadow-sm flex flex-col items-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #2563eb 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+            <div className="relative z-10">
+                <CircularProgress 
+                  percentage={stats?.totalStudents ? (stats?.genderRatio?.male / stats?.totalStudents) * 100 : 0} 
+                  color="text-pink-500" 
+                  centerText={`${stats?.genderRatio?.male || 0}/${stats?.genderRatio?.female || 0}`} 
+                  label="Gender" 
+                  subText="M/F"
+                />
+            </div>
         </div>
-        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress 
-              percentage={stats?.totalStudents ? (stats.clearedVsDebtors?.cleared / stats.totalStudents) * 100 : 0} 
-              color="text-blue-600" 
-              centerText={`${stats?.clearedVsDebtors?.cleared || 0}/${stats?.clearedVsDebtors?.debtors || 0}`} 
-              label="Cleared" 
-            />
+        <div className="bg-blue-50/30 p-4 sm:p-6 rounded-2xl border border-blue-100/50 shadow-sm flex flex-col items-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #2563eb 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+            <div className="relative z-10">
+                <CircularProgress 
+                  percentage={stats?.totalStudents ? (stats.clearedVsDebtors?.cleared / stats.totalStudents) * 100 : 0} 
+                  color="text-blue-600" 
+                  centerText={`${stats?.clearedVsDebtors?.cleared || 0}/${stats?.clearedVsDebtors?.debtors || 0}`} 
+                  label="Cleared" 
+                />
+            </div>
         </div>
-        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-            <CircularProgress percentage={stats?.totalStudents ? (stats.busSubscribers / stats.totalStudents) * 100 : 0} color="text-indigo-500" centerText={stats?.busSubscribers || 0} label="Bus" />
+        <div className="bg-blue-50/30 p-4 sm:p-6 rounded-2xl border border-blue-100/50 shadow-sm flex flex-col items-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #2563eb 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+            <div className="relative z-10">
+                <CircularProgress percentage={stats?.totalStudents ? (stats.busSubscribers / stats.totalStudents) * 100 : 0} color="text-indigo-500" centerText={stats?.busSubscribers || 0} label="Bus" />
+            </div>
         </div>
       </div>
 

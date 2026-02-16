@@ -60,7 +60,7 @@ export default function StudentsPage() {
             };
         }
         acc[level].count++;
-        const balance = parseFloat(String(student.cr69d_wallectbalance || '0').replace(/[^0-9.-]+/g, '')) || 0;
+        const balance = parseFloat(String(student.cr69d_totaloutstanding || '0').replace(/[^0-9.-]+/g, '')) || 0;
         if (balance > 1) acc[level].hasDebtors = true;
         return acc;
     }, {});
@@ -71,10 +71,6 @@ export default function StudentsPage() {
         const matchesDebtors = !showDebtors || level.hasDebtors;
         return matchesName && matchesLevel && matchesDebtors;
     });
-
-    if (isLoading) {
-        return <Loader />;
-    }
 
     return (
         <div className="flex h-[calc(100vh-64px)] bg-[#F8FAFC]">
@@ -244,8 +240,9 @@ export default function StudentsPage() {
                                         <div 
                                             key={i} 
                                             onClick={() => router.push(`/dashboard/students/${encodeURIComponent(level.name)}`)}
-                                            className="group relative h-[100px] bg-white rounded-2xl border border-slate-100 p-5 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 cursor-pointer overflow-hidden"
+                                            className="group relative h-[100px] bg-blue-50/30 rounded-2xl border border-blue-100/50 p-5 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 cursor-pointer overflow-hidden"
                                         >
+                                            <div className="absolute inset-0 opacity-[0.2] group-hover:opacity-[0.3] transition-opacity pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #2563eb 1px, transparent 0)', backgroundSize: '20px 20px' }} />
                                             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                             
                                             <div className="relative z-10 flex flex-col min-w-0">
@@ -257,7 +254,7 @@ export default function StudentsPage() {
                                                 {level.hasDebtors && (
                                                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                                 )}
-                                                <div className="w-10 h-10 rounded-full bg-[#E2E8F0]/30 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-[#475569] font-black text-sm transition-all shadow-inner">
+                                                <div className="w-10 h-10 rounded-full bg-[#E2E8F0]/30 group-hover:bg-[var(--primary)] group-hover:text-white flex items-center justify-center text-[#475569] font-black text-sm transition-all shadow-inner">
                                                     {level.count}
                                                 </div>
                                             </div>
