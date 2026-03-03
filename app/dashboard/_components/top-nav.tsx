@@ -1,8 +1,9 @@
 "use client";
 
-import { Bell, Search, Settings, HelpCircle, User, Menu, LogOut } from "lucide-react";
+import { Bell, Search, Settings, HelpCircle, User, Menu, LogOut, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 const TopNav = ({ onMenuClick }: { onMenuClick: () => void }) => {
     const [user, setUser] = useState<any>(null);
@@ -21,69 +22,70 @@ const TopNav = ({ onMenuClick }: { onMenuClick: () => void }) => {
     }, []);
 
     return (
-        <header className="h-20 bg-white border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-8 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-4">
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 px-4 sm:px-8 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="flex items-center gap-6">
                 <button 
                     onClick={onMenuClick}
-                    className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="lg:hidden p-2.5 -ml-2 text-slate-500 hover:bg-slate-50 rounded-2xl transition-colors"
                 >
                     <Menu className="w-6 h-6" />
                 </button>
                 
                 <div className="flex flex-col">
-                    <h2 className="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight leading-tight">
-                        Welcome, {user?.username?.split('@')[0] || "Agent"}!
-                    </h2>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest truncate max-w-[120px] sm:max-w-none">
-                            {user?.organisation || "Delda Quest Model Schools"}
-                        </span>
-                        <span className="hidden sm:block h-1 w-1 rounded-full bg-slate-300" />
-                        <span className="hidden md:block text-[10px] text-blue-600 font-bold uppercase tracking-widest">Confidentiality Agreement in place</span>
+                    <motion.div 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2"
+                    >
+                        <h2 className="text-xl font-black text-slate-800 tracking-tight leading-none">
+                            Hello, {user?.username?.split('@')[0] || "Agent"}!
+                        </h2>
+                        <span className="text-xl">👋</span>
+                    </motion.div>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] sm:text-xs font-black text-[var(--primary)] uppercase tracking-widest opacity-80">
+                            {user?.organisation || "LSA ACADEMIC SYSTEM"}
+                        </p>
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center gap-6">
-                <div className="relative hidden md:block">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <div className="relative hidden md:block group">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-[var(--primary)] transition-colors" />
                     <input 
                         type="text" 
-                        placeholder="Search dashboard..." 
-                        className="h-10 pl-10 pr-4 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 rounded-full text-sm transition-all w-64 outline-none"
+                        placeholder="Search students, records..." 
+                        className="h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 focus:bg-white focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/5 rounded-2xl text-[13px] font-medium transition-all w-72 outline-none placeholder:text-slate-400"
                     />
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors relative">
-                        <Bell className="w-5 h-5" />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                <div className="flex items-center gap-2">
+                    <button className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-500 hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-all relative group">
+                        <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                        <span className="absolute top-3 right-3 w-2 h-2 bg-[var(--accent)] rounded-full border-2 border-white shadow-[0_0_8px_var(--accent)]" />
                     </button>
-                    <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
-                        <HelpCircle className="w-5 h-5" />
+                    <button className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-500 hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-all">
+                        <Sparkles className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="h-8 w-px bg-slate-200 mx-2" />
+                <div className="h-8 w-px bg-slate-100 mx-1" />
 
                 <div className="flex items-center gap-3">
-                    <div className="text-right hidden sm:flex flex-col items-end">
-                        <p className="text-sm font-bold text-slate-800 leading-none">Agent ({user?.role || "Admin"})</p>
-                        <p className="text-[10px] text-slate-500 font-medium leading-none mt-1">
-                            {user?.organisation?.split(' ')[0] || "LSA"} School
-                        </p>
-                    </div>
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center shadow-inner group relative">
-                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                        <button 
-                            onClick={handleLogout}
-                            className="absolute -bottom-12 right-0 bg-white border border-slate-200 rounded-lg shadow-lg py-2 px-4 text-xs font-bold text-red-600 whitespace-nowrap hidden group-hover:block hover:bg-red-50 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <LogOut className="w-3 h-3" />
-                                Sign Out
-                            </div>
-                        </button>
+                    <div className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner group relative overflow-hidden transition-all hover:border-[var(--primary)]/30">
+                        <div className="absolute inset-0 bg-[var(--primary)] opacity-0 group-hover:opacity-[0.03] transition-opacity" />
+                        <User className="w-5 h-5 text-slate-400 group-hover:text-[var(--primary)] transition-colors" />
+                        
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 px-1 hidden group-hover:block animate-in fade-in slide-in-from-top-2 duration-200">
+                             <button 
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-slate-600 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                End Session
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

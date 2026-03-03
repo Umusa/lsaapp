@@ -8,9 +8,19 @@ import {
     MoreHorizontal,
     UserPlus,
     Filter,
-    ChevronDown
+    ChevronDown,
+    Calendar,
+    Mail,
+    Phone,
+    CreditCard,
+    CheckCircle2,
+    XCircle,
+    GraduationCap,
+    Clock,
+    Users
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import Loader from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
@@ -35,12 +45,22 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
 
     const fetchStudents = async (org: string) => {
         try {
-            setIsLoading(true);
+            // Check cache for instant load
+            const cacheKey = `students_level_${level}_${org}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                setStudents(JSON.parse(cached));
+                setIsLoading(false);
+            } else {
+                setIsLoading(true);
+            }
+
             const res = await fetch(`/api/students?org=${encodeURIComponent(org)}`);
             const data = await res.json();
-            // Filter only students for this level
             const levelStudents = (data.students || []).filter((s: any) => s.cr69d_level === level);
+            
             setStudents(levelStudents);
+            localStorage.setItem(cacheKey, JSON.stringify(levelStudents));
         } catch (err) {
             console.error("Failed to fetch students:", err);
         } finally {
@@ -53,155 +73,188 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
         student.cr69d_emailaddress?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    if (isLoading) return (
+        <div className="h-[80vh] flex flex-col items-center justify-center gap-4">
+            <Loader />
+            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Downloading Class Registry...</p>
+        </div>
+    );
+
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] bg-[#F8FAFC]">
-            {/* Header */}
-            <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-8 space-y-8 animate-in fade-in duration-500">
+            {/* Context Navigation */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={() => router.push('/dashboard/students')}
-                        className="p-2 -ml-2 text-slate-400 hover:text-slate-600 bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+                        className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all shadow-sm group"
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                     </button>
-                    <div>
-                        <h1 className="text-xl font-black text-slate-800 tracking-tight">{level}</h1>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            Student Database • {students.length} Records
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-black text-slate-800 tracking-tighter">{level}</h1>
+                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
+                                Academic Year 2025/26
+                            </span>
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            Registry Database • {students.length} Total Scholars Registered
                         </p>
                     </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                    <button className="h-10 px-4 bg-white border border-slate-200 text-slate-700 text-[11px] font-black rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
-                        <FileDown className="w-4 h-4" /> Export
+                    <button className="h-12 px-6 bg-white border border-slate-100 text-slate-600 text-xs font-black rounded-2xl flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
+                        <FileDown className="w-4 h-4" /> Export Level
                     </button>
-                    <button className="h-10 px-4 bg-[var(--primary)] text-white text-[11px] font-black rounded-xl flex items-center gap-2 hover:bg-[var(--primary-hover)] transition-all shadow-lg shadow-primary/20">
-                        <UserPlus className="w-4 h-4" /> Add Student
+                    <button className="h-12 px-6 bg-indigo-600 text-white text-xs font-black rounded-2xl flex items-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-indigo-600/20">
+                        <UserPlus className="w-4 h-4" /> Register Student
                     </button>
                 </div>
-            </header>
+            </div>
 
-            {/* Main Table Area */}
-            <main className="flex-1 p-6 overflow-hidden flex flex-col relative">
-                <div className="bg-blue-50/30 rounded-3xl border border-blue-100/50 shadow-xl shadow-slate-200/40 flex flex-col flex-1 overflow-hidden relative">
-                    <div className="absolute inset-0 opacity-[0.1] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #2563eb 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-                    <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
-                    {/* Table Toolbar */}
-                    <div className="p-4 border-b border-slate-50 flex items-center justify-between gap-4 shrink-0">
-                        <div className="flex-1 max-w-md relative">
-                            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input 
-                                type="text" 
-                                placeholder="Filter by name or email..." 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full h-10 pl-10 pr-4 bg-slate-50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button className="h-10 px-4 bg-slate-50 text-slate-600 text-[11px] font-bold rounded-xl flex items-center gap-2 hover:bg-slate-100 transition-all">
-                                <Filter className="w-3.5 h-3.5" /> Filters
-                            </button>
+            {/* Premium Table Content */}
+            <div className="premium-card overflow-hidden">
+                <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="relative w-full md:max-w-md group">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-indigo-600 transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Search by scholar name, email, or ID..." 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-11 pl-11 pr-4 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:border-indigo-600/30 transition-all outline-none"
+                        />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <Clock className="w-4 h-4" />
+                            Last Sync: Just Now
                         </div>
                     </div>
+                </div>
 
-                    {/* Table */}
-                    <div className="flex-1 overflow-y-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="sticky top-0 z-20 bg-white/80 backdrop-blur-md">
-                                <tr className="border-b border-slate-50">
-                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Student Name</th>
-                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Gender</th>
-                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
-                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">Balance</th>
-                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">Actions</th>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-50">
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Scholar Profile</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Contact Info</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">System Status</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] text-right">Account Balance</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] text-right">Management</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {filteredStudents.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-8 py-32 text-center">
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center">
+                                                <Users className="w-10 h-10 text-slate-200" />
+                                            </div>
+                                            <p className="text-slate-400 font-black text-xs uppercase tracking-widest">No scholars matching your query</p>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50 px-4">
-                                {filteredStudents.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-8 py-32 text-center text-slate-400 font-bold text-sm">
-                                            No students found in this level.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredStudents.map((student, i) => {
-                                        const balance = parseFloat(String(student.cr69d_totaloutstanding || '0').replace(/[^0-9.-]+/g, '')) || 0;
-                                        const isActive = String(student.cr69d_studentactive).toLowerCase() === 'true';
+                            ) : (
+                                filteredStudents.map((student, i) => {
+                                    const balance = parseFloat(String(student.cr69d_totaloutstanding || '0').replace(/[^0-9.-]+/g, '')) || 0;
+                                    const isActive = String(student.cr69d_studentactive).toLowerCase() === 'true';
 
-                                        return (
-                                            <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-8 py-4 cursor-pointer" onClick={() => router.push(`/dashboard/students/details/${student.cr69d_studentid}`)}>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 rounded-xl bg-[var(--primary-soft)] text-[var(--primary)] flex items-center justify-center font-black text-xs shadow-sm ring-1 ring-[var(--primary)]/10">
-                                                            {(student.cr69d_title || 'S').charAt(0).toUpperCase()}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-black text-slate-800 truncate leading-none mb-1 group-hover:text-[var(--primary)] transition-colors">
-                                                                {student.cr69d_title || 'Unknown Student'}
-                                                            </p>
-                                                            <p className="text-[10px] text-slate-400 font-bold truncate">
-                                                                {student.cr69d_emailaddress || 'no-email@school.com'}
-                                                            </p>
-                                                        </div>
+                                    return (
+                                        <motion.tr 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.03 }}
+                                            key={i} 
+                                            className="group hover:bg-[var(--primary-light)]/30 transition-colors"
+                                        >
+                                            <td className="px-8 py-5 cursor-pointer" onClick={() => router.push(`/dashboard/students/details/${student.cr69d_studentid}`)}>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center text-indigo-600 font-black text-xs shadow-sm ring-1 ring-indigo-200/50 group-hover:scale-105 transition-transform">
+                                                        {(student.cr69d_title || 'S').charAt(0).toUpperCase()}
                                                     </div>
-                                                </td>
-                                                <td className="px-8 py-4">
-                                                    <span className="text-[10px] font-black px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg uppercase tracking-tight">
-                                                        {student.cr69d_gender || 'Unspecified'}
+                                                    <div>
+                                                        <p className="text-sm font-black text-slate-800 tracking-tight leading-none mb-1 group-hover:text-indigo-600 transition-colors">
+                                                            {student.cr69d_title || 'Unknown Scholar'}
+                                                        </p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                            {student.cr69d_gender || 'Unspecified Gender'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                                                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                                        {student.cr69d_emailaddress || 'No email registered'}
+                                                    </div>
+                                                    {student.cr69d_phonenumber && (
+                                                        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                                                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                                            {student.cr69d_phonenumber}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className={cn(
+                                                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border",
+                                                    isActive 
+                                                        ? "bg-emerald-50 border-emerald-100 text-emerald-600" 
+                                                        : "bg-slate-50 border-slate-100 text-slate-400"
+                                                )}>
+                                                    {isActive ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5" />}
+                                                    <span className="text-[10px] font-black uppercase tracking-widest ring-emerald-400">
+                                                        {isActive ? 'Verified Active' : 'Suspended'}
                                                     </span>
-                                                </td>
-                                                <td className="px-8 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={cn(
-                                                            "w-1.5 h-1.5 rounded-full",
-                                                            isActive ? "bg-emerald-500 shadow-sm shadow-emerald-500/50" : "bg-slate-300"
-                                                        )} />
-                                                        <span className={cn(
-                                                            "text-[10px] font-black uppercase tracking-widest",
-                                                            isActive ? "text-emerald-600" : "text-slate-400"
-                                                        )}>
-                                                            {isActive ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-4 text-right">
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <div className="flex flex-col items-end">
                                                     <p className={cn(
-                                                        "text-sm font-black",
+                                                        "text-base font-black tracking-tighter",
                                                         balance > 0 ? "text-rose-600" : "text-emerald-600"
                                                     )}>
                                                         ₦{balance.toLocaleString()}
                                                     </p>
-                                                </td>
-                                                <td className="px-8 py-4 text-right">
-                                                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                                                        <MoreHorizontal className="w-5 h-5" />
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                                                        {balance > 0 ? "Outstanding Debt" : "Clear Account"}
+                                                    </p>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 flex items-center justify-center transition-all border border-slate-100">
+                                                        <CreditCard className="w-4 h-4" />
                                                     </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    </div>
-                    {/* Footer */}
-                    <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between shrink-0 relative z-10">
-                        <p className="text-[11px] font-bold text-slate-400 italic">
-                            Data synced from live Google Sheets
-                        </p>
-                        <div className="flex items-center gap-4">
-                             <p className="text-[11px] font-bold text-slate-800">
-                                Support ({userData?.organisation || "School"})
-                            </p>
-                        </div>
+                                                    <button className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 flex items-center justify-center transition-all border border-slate-100">
+                                                        <MoreHorizontal className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div className="p-6 bg-slate-50/30 border-t border-slate-50 flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                         Live Synchronization with {userData?.organisation || "Institutional"} Database
+                    </p>
+                    <div className="flex items-center gap-4">
+                        <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">
+                            Request Batch Update
+                        </button>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
-

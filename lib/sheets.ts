@@ -6,7 +6,7 @@ interface CacheEntry {
     timestamp: number;
 }
 
-const CACHE_TTL = 1000; // 1 second for active debugging
+const CACHE_TTL = 300000; // 5 minutes for better performance
 
 // Persist cache across HMR reloads in development
 const globalForSheets = global as unknown as {
@@ -46,7 +46,7 @@ export async function getStudentRows() {
         const sheets = await getSheetsInstance(true);
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: `'${targetSheet}'!A:ZZ`,
+            range: `'${targetSheet}'!A1:AM1000`, // Narrower range for significant speed boost
         });
 
         const rows = response.data.values || [];
