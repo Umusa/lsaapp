@@ -1,4 +1,4 @@
-import { getStudentRows } from './lib/sheets.ts';
+import { getStudentRows } from './lib/sheets';
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
