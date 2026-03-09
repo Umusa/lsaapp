@@ -74,7 +74,9 @@ const LevelCard = ({ level, delay }: any) => {
     );
 };
 
-export default function StudentsPage() {
+import { Suspense } from "react";
+
+function StudentsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialSearch = searchParams.get('search') || "";
@@ -301,5 +303,18 @@ export default function StudentsPage() {
                 />
             )}
         </div>
+    );
+}
+
+export default function StudentsPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-[80vh] flex flex-col items-center justify-center gap-4">
+                <Loader />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Preparing students page...</p>
+            </div>
+        }>
+            <StudentsContent />
+        </Suspense>
     );
 }
