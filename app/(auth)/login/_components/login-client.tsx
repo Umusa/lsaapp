@@ -6,10 +6,11 @@ import { motion } from "framer-motion";
 import MarketingPanel from "./marketing-panel";
 import LoginForm from "./login-form";
 import Loader from "@/components/ui/loader";
+import NovaLogo from "@/components/ui/nova-logo";
 
 const LoginClient = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [schoolColor, setSchoolColor] = useState("#2563eb");
+  const [schoolColor, setSchoolColor] = useState("#4f46e5"); // Indigo for Education
   const router = useRouter();
 
   const handleSubmit = async (data: any) => {
@@ -30,9 +31,8 @@ const LoginClient = () => {
       }
 
       console.log("Login successful:", result);
-      // Store user data and theme for the dashboard
       localStorage.setItem("user", JSON.stringify(result.user));
-      localStorage.setItem("school_theme", data.schoolColor || "#2563eb");
+      localStorage.setItem("school_theme", data.schoolColor || "#4f46e5");
       router.push("/dashboard/home");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -43,61 +43,42 @@ const LoginClient = () => {
   };
 
     return (
-        <div className="min-h-screen relative flex items-center justify-center overflow-hidden font-sans">
+        <div className="min-h-screen relative flex items-center justify-center bg-[#f8fafc] font-sans p-4">
             {isLoading && <Loader />}
             
-            {/* Immersive Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                <div 
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105" 
-                    style={{ backgroundImage: "url('/images/premium_login_bg.png')" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-900/60 to-indigo-950/80 backdrop-blur-[2px]" />
-                
-                {/* Floating Particles */}
-                {[...Array(6)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        animate={{
-                            y: [0, -100, 0],
-                            x: [0, i % 2 === 0 ? 50 : -50, 0],
-                            opacity: [0.1, 0.3, 0.1],
-                        }}
-                        transition={{
-                            duration: 15 + i * 2,
-                            repeat: Infinity,
-                            ease: "linear",
-                        }}
-                        className="absolute rounded-full bg-blue-500/20 blur-3xl"
-                        style={{
-                            width: `${200 + i * 100}px`,
-                            height: `${200 + i * 100}px`,
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Content Container */}
+            {/* Top Left Floating Brand Box */}
             <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="relative z-10 w-full max-w-6xl mx-4 grid lg:grid-cols-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[40px] shadow-2xl overflow-hidden"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="absolute top-8 left-8 z-30 hidden lg:block"
             >
-                {/* Left Side: Marketing/Branding */}
-                <div className="h-full">
-                    <MarketingPanel />
+                <div className="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col items-center gap-1.5">
+                    <NovaLogo size="sm" onlyBadge />
+                    <span className="text-[9px] font-black text-slate-900 tracking-[0.2em] uppercase">LSA</span>
                 </div>
+            </motion.div>
 
-                {/* Right Side: Login Form */}
-                <div className="flex flex-col items-center justify-center p-8 lg:p-16 xl:p-24 bg-white/5">
+            {/* Main Content Container */}
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="relative z-10 w-full max-w-3xl grid lg:grid-cols-[1.1fr_1fr] bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] overflow-hidden min-h-[400px] border border-slate-100"
+            >
+                {/* Left Side: Marketing/Branding (White) */}
+                <MarketingPanel />
+
+                {/* Right Side: Login Sidebar (Purple) */}
+                <div className="relative flex flex-col items-center justify-center p-8 lg:p-10 bg-indigo-600">
+                    {/* Background Subtle Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-indigo-600/90 to-blue-700 pointer-events-none" />
+                    
                     <motion.div 
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5, duration: 0.6 }}
-                        className="w-full"
+                        transition={{ delay: 0.4, duration: 0.6 }}
+                        className="relative z-10 w-full"
                     >
                         <LoginForm
                             onSubmit={handleSubmit}
@@ -107,27 +88,20 @@ const LoginClient = () => {
                         />
                     </motion.div>
                     
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1, duration: 1 }}
-                        className="mt-12 text-center"
-                    >
-                        <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">
-                            © 2025 LSA Institutional Intelligence Hub
-                        </p>
-                    </motion.div>
+                    <div className="mt-auto pt-8 relative z-10">
+                         <div className="flex items-center gap-2">
+                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                             
+                         </div>
+                    </div>
                 </div>
             </motion.div>
 
-            {/* Subtle decorative elements */}
-            <div className="absolute top-12 left-12 z-20 hidden lg:block">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                        <div className="w-4 h-4 rounded-full bg-indigo-500 animate-pulse" />
-                    </div>
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest opacity-60">System Online</span>
-                </div>
+            {/* Footer Text */}
+            <div className="absolute bottom-6 w-full text-center">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    Build 3.260.113 Education Hub | Secured by UMUSA DIGITAL
+                </p>
             </div>
         </div>
     );

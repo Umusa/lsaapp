@@ -31,6 +31,7 @@ model Student {
   cr69d_termjoined       String?
   cr69d_bus_subcriber    Boolean   @default(false)
   cr69d_sms_subscriber   Boolean   @default(false)
+  cr69d_photo            String?   @db.Text
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 

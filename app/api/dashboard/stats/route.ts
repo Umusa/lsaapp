@@ -5,22 +5,26 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const org = searchParams.get('org');
+    const refresh = searchParams.get('refresh') === 'true';
 
     if (!org) {
       return NextResponse.json({ error: 'Organisation is required' }, { status: 400 });
     }
 
-    console.log(`[Stats API] Fetching students for org: "${org}" from Database`);
-
-    // Fetch all active students for the organization
-    const students = await prisma.student.findMany({
-        where: {
-            cr69d_instucode: org,
-        }
-    });
+    let students = [];
+    try {
+        const cloudStorage = await import('@/lib/sheets');
+        const allStudents = await cloudStorage.getStudentsAsObjects(refresh);
+        const normalizedOrg = String(org).trim().toLowerCase();
+        
+        students = allStudents.filter((s: any) => 
+            String(s.cr69d_instucode || '').trim().toLowerCase() === normalizedOrg
+        );
+    } catch (cloudError: any) {
+        return NextResponse.json({ error: 'Secure Cloud: Communication failed' }, { status: 500 });
+    }
 
     if (!students || students.length === 0) {
-        console.log(`[Stats API] No students found for org: "${org}"`);
         return NextResponse.json({ 
             totalStudents: 0,
             activePercentage: 0,
@@ -39,37 +43,41 @@ export async function GET(req: Request) {
             smsSubscribers: 0,
             incompleteProfiles: 0,
             levels: [],
-            sections: []
+            sections: [],
+            // New empty states
+            idCardStats: { printed: 0, pending: 0 },
+            medicalAlerts: 0,
+            transportStats: { pickup: 0, dropoff: 0, both: 0 }
         });
     }
-
-    console.log(`[Stats API] Found ${students.length} students for org: "${org}"`);
 
     const totalStudents = students.length;
     let activeStudentsCount = 0;
     let maleCount = 0;
     let femaleCount = 0;
-    
     let ratioCleared = 0;
     let ratioDebtors = 0;
-
     let clearedBalanceCount = 0;
     let creditBalanceCount = 0;
     let totalDebtorsCount = 0;
-    
     let inactiveDebtSum = 0;
     let totalPaid = 0;
     let totalOwing = 0;
-    
     let whatsappCount = 0;
     let emailCount = 0;
     let busSubscribers = 0;
     let smsSubscribers = 0;
-    
+
+    // --- NEW TRACKERS FOR ADMIN DASHBOARD ---
+    let printedCards = 0;
+    let pendingCards = 0;
+    let medicalAlertsCount = 0;
+    let busPickupCount = 0;
+
     const levelsMap: { [key: string]: { count: number; paid: number; owing: number } } = {};
     const sectionsMap: { [key: string]: { count: number; paid: number; owing: number } } = {};
 
-    students.forEach(student => {
+    students.forEach((student: any) => {
         const isActive = student.cr69d_studentactive;
         if (isActive) activeStudentsCount++;
 
@@ -103,6 +111,11 @@ export async function GET(req: Request) {
 
         if (student.cr69d_bus_subcriber) busSubscribers++;
         if (student.cr69d_sms_subscriber) smsSubscribers++;
+
+        // --- NEW LOGIC FOR ADMIN FIELDS ---
+        if (student.cr69d_printed) printedCards++; else pendingCards++;
+        if (student.cr69d_medication_information && student.cr69d_medication_information.trim().length > 2) medicalAlertsCount++;
+        if (student.cr69d_buspasspickupoption) busPickupCount++;
 
         const level = (student.cr69d_level || 'Unknown').trim();
         if (!levelsMap[level]) levelsMap[level] = { count: 0, paid: 0, owing: 0 };
@@ -144,12 +157,15 @@ export async function GET(req: Request) {
         incompleteProfiles: Math.max(0, totalStudents - Math.min(whatsappCount, emailCount)),
         levels,
         sections,
+        // --- NEW DATA RETURNED TO DASHBOARD ---
+        idCardStats: { printed: printedCards, pending: pendingCards },
+        medicalAlerts: medicalAlertsCount,
+        busPickupCount: busPickupCount
     };
 
     return NextResponse.json(stats);
 
   } catch (error: any) {
-    console.error('Stats API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Data processing error' }, { status: 500 });
   }
 }

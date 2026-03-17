@@ -55,11 +55,19 @@ const LevelCard = ({ level, delay }: any) => {
 
             <div className="relative z-10 mt-4 flex items-center justify-between">
                 <div className="flex -space-x-2">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
-                            <Users className="w-3 h-3 text-slate-400" />
-                        </div>
-                    ))}
+                    {level.photos && level.photos.length > 0 ? (
+                        level.photos.slice(0, 3).map((photo: string, i: number) => (
+                            <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
+                                <img src={photo} alt="" className="w-full h-full object-cover" />
+                            </div>
+                        ))
+                    ) : (
+                        [1, 2, 3].map((i) => (
+                            <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
+                                <Users className="w-3 h-3 text-slate-400" />
+                            </div>
+                        ))
+                    )}
                     <div className="w-6 h-6 rounded-full border-2 border-white bg-indigo-50 flex items-center justify-center text-[8px] font-black text-indigo-600">
                         +
                     </div>
@@ -99,23 +107,28 @@ function StudentsContent() {
         }
     }, [initialSearch]);
 
-    const fetchStudents = async (org: string) => {
+    const fetchStudents = async (org: string, force = false) => {
         try {
             // Check client-side cache first for instant load
-            const cachedData = localStorage.getItem(`students_cache_${org}`);
-            if (cachedData) {
-                setStudents(JSON.parse(cachedData));
-                setIsLoading(false);
+            const cacheKey = `students_cache_${org}`;
+            if (!force) {
+                const cachedData = localStorage.getItem(cacheKey);
+                if (cachedData) {
+                    setStudents(JSON.parse(cachedData));
+                    setIsLoading(false);
+                } else {
+                    setIsLoading(true);
+                }
             } else {
                 setIsLoading(true);
             }
 
-            const res = await fetch(`/api/students?org=${encodeURIComponent(org)}`);
+            const res = await fetch(`/api/students?org=${encodeURIComponent(org)}&refresh=${force}`);
             const data = await res.json();
             
             if (data.students) {
                 setStudents(data.students);
-                localStorage.setItem(`students_cache_${org}`, JSON.stringify(data.students));
+                localStorage.setItem(cacheKey, JSON.stringify(data.students));
             }
         } catch (err) {
             console.error("Failed to fetch students:", err);
@@ -137,8 +150,8 @@ function StudentsContent() {
             throw new Error(error.error || "Enrollment failed");
         }
         
-        // Refresh data
-        fetchStudents(org);
+        // Refresh data with force true
+        fetchStudents(org, true);
     };
 
     const studentsByLevel = students.reduce((acc: any, student: any) => {
@@ -148,10 +161,14 @@ function StudentsContent() {
                 name: level,
                 category: student.cr69d_section || "Academic Section",
                 count: 0,
-                hasDebtors: false
+                hasDebtors: false,
+                photos: []
             };
         }
         acc[level].count++;
+        if (student.cr69d_photo && acc[level].photos.length < 5) {
+            acc[level].photos.push(student.cr69d_photo);
+        }
         const balance = parseFloat(String(student.cr69d_totaloutstanding || '0').replace(/[^0-9.-]+/g, '')) || 0;
         if (balance > 1) acc[level].hasDebtors = true;
         return acc;
@@ -260,10 +277,14 @@ function StudentsContent() {
                             setSearchQuery("");
                             setSelectedLevel("All Levels");
                             setShowDebtors(false);
+                            const org = userData?.instuCode || userData?.organisation;
+                            if (org) fetchStudents(org, true);
                         }}
-                        className="w-11 h-11 bg-[var(--background)] hover:bg-[var(--primary-light)] text-slate-400 border border-[var(--border-color)] rounded-xl flex items-center justify-center transition-all"
+                        className="h-11 px-4 bg-[var(--background)] hover:bg-[var(--primary-light)] text-slate-400 hover:text-[var(--primary)] border border-[var(--border-color)] rounded-xl flex items-center justify-center gap-2 transition-all font-black text-[10px] uppercase tracking-widest"
+                        title="Force refresh registry"
                     >
                         <RotateCcw className="w-4 h-4" />
+                        <span>Update Current State</span>
                     </button>
                 </div>
             </div>
@@ -290,7 +311,7 @@ function StudentsContent() {
             <div className="flex justify-center pt-12 pb-6">
                 <div className="px-6 py-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-sm text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                        Showing {levelsArray.length} Classes • {userData?.organisation || "LSA"} Secure Cloud
+                        Showing {levelsArray.length} Classes • {userData?.organisation || "LSA"} Secure System
                     </p>
                 </div>
             </div>
@@ -300,6 +321,7 @@ function StudentsContent() {
                     isOpen={isEnrollModalOpen}
                     onClose={() => setIsEnrollModalOpen(false)}
                     onSave={handleEnroll}
+                    availableClasses={Object.values(studentsByLevel).map((l: any) => ({ name: l.name, count: l.count })).sort((a, b) => a.name.localeCompare(b.name))}
                 />
             )}
         </div>

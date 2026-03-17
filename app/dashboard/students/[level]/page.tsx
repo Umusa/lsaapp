@@ -47,19 +47,23 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
         }
     }, []);
 
-    const fetchStudents = async (org: string) => {
+    const fetchStudents = async (org: string, force = false) => {
         try {
             // Check cache for instant load
             const cacheKey = `students_level_${level}_${org}`;
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                setStudents(JSON.parse(cached));
-                setIsLoading(false);
+            if (!force) {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    setStudents(JSON.parse(cached));
+                    setIsLoading(false);
+                } else {
+                    setIsLoading(true);
+                }
             } else {
                 setIsLoading(true);
             }
 
-            const res = await fetch(`/api/students?org=${encodeURIComponent(org)}`);
+            const res = await fetch(`/api/students?org=${encodeURIComponent(org)}&refresh=${force}`);
             const data = await res.json();
             const levelStudents = (data.students || []).filter((s: any) => s.cr69d_level === level);
             
@@ -88,7 +92,7 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
             throw new Error(error.error || "Operation failed");
         }
 
-        fetchStudents(org);
+        fetchStudents(org, true);
     };
 
     const handleDelete = async (id: string) => {
@@ -218,8 +222,12 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
                                         >
                                             <td className="px-8 py-5 cursor-pointer" onClick={() => router.push(`/dashboard/students/details/${student.cr69d_studentid}`)}>
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary)]/20 flex items-center justify-center text-[var(--primary)] font-black text-xs shadow-sm ring-1 ring-[var(--primary)]/10 group-hover:scale-105 transition-transform">
-                                                        {(student.cr69d_title || 'S').charAt(0).toUpperCase()}
+                                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary)]/20 flex items-center justify-center text-[var(--primary)] font-black text-xs shadow-sm ring-1 ring-[var(--primary)]/10 group-hover:scale-105 transition-transform overflow-hidden">
+                                                        {student.cr69d_photo ? (
+                                                            <img src={student.cr69d_photo} alt="" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            (student.cr69d_title || 'S').charAt(0).toUpperCase()
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-black text-foreground tracking-tight leading-none mb-1 group-hover:text-[var(--primary)] transition-colors">
@@ -316,6 +324,14 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onSave={handleSave}
+                    availableClasses={Object.values(
+                        students.reduce((acc: Record<string, { name: string, count: number }>, s: any) => {
+                            const l = s.cr69d_level || "Unknown";
+                            if (!acc[l]) acc[l] = { name: l, count: 0 };
+                            acc[l].count++;
+                            return acc;
+                        }, {} as Record<string, { name: string, count: number }>)
+                    ).sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name))}
                 />
             )}
         </div>

@@ -92,17 +92,21 @@ const DashboardHome = () => {
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchStats = async (org: string) => {
+  const fetchStats = async (org: string, force = false) => {
     try {
-      const cached = localStorage.getItem(`dashboard_stats_${org}`);
-      if (cached) {
-        setStats(JSON.parse(cached));
-        setIsLoading(false);
+      if (!force) {
+        const cached = localStorage.getItem(`dashboard_stats_${org}`);
+        if (cached) {
+          setStats(JSON.parse(cached));
+          setIsLoading(false);
+        } else {
+          setIsLoading(true);
+        }
       } else {
         setIsLoading(true);
       }
 
-      const res = await fetch(`/api/dashboard/stats?org=${encodeURIComponent(org)}`);
+      const res = await fetch(`/api/dashboard/stats?org=${encodeURIComponent(org)}${force ? '&refresh=true' : ''}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
@@ -147,6 +151,13 @@ const DashboardHome = () => {
                 <div className="text-white">
                     <h1 className="text-2xl font-black tracking-tighter mb-0.5">Welcome back,</h1>
                     <h2 className="text-3xl font-black tracking-tighter opacity-95">{user?.name || "Member"}!</h2>
+                    <button 
+                        onClick={() => fetchStats(user?.instuCode || user?.organisation, true)}
+                        className="mt-2 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 transition-colors px-3 py-1.5 rounded-lg border border-white/20"
+                    >
+                        <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin")} />
+                        Refresh Current State
+                    </button>
                 </div>
                 <div className="text-right text-white/95">
                     <p className="text-[10px] font-black uppercase tracking-widest leading-none drop-shadow-md">
@@ -209,7 +220,7 @@ const DashboardHome = () => {
                 <MetricItem label="Fully Paid" value={stats?.clearedBalanceCount || 0} sublabel="Students who have paid everything" />
                 <MetricItem label="Overpaid" value={stats?.creditBalanceCount || 0} sublabel="Students who paid extra money" />
                 <MetricItem label="Still Owed" value={stats?.totalDebtors || 0} color="text-rose-600" />
-                <MetricItem label="Total Records" value={stats?.totalStudents || 0} sublabel="All students in database" />
+                <MetricItem label="Total Records" value={stats?.totalStudents || 0} sublabel="All students in storage" />
             </div>
 
             {/* Row 3: Financial Visuals & Profile Health */}
@@ -316,8 +327,8 @@ const DashboardHome = () => {
                 
                 <div className="mt-8 pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                        <span>DB SYNC OK</span>
-                        <span>v2.4.9</span>
+                        <span>Connection Active</span>
+                        <span>v2.5.0</span>
                     </div>
                 </div>
             </div>
