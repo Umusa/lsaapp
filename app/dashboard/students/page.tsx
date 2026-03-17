@@ -318,6 +318,7 @@ function StudentsContent() {
 
             {isEnrollModalOpen && (
                 <StudentModal 
+                    org={userData?.instuCode || userData?.organisation}
                     isOpen={isEnrollModalOpen}
                     onClose={() => setIsEnrollModalOpen(false)}
                     onSave={handleEnroll}

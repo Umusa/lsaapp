@@ -320,6 +320,7 @@ export default function LevelStudentsPage({ params }: { params: Promise<{ level:
 
             {isModalOpen && (
                 <StudentModal 
+                    org={userData?.instuCode || userData?.organisation}
                     student={selectedStudent}
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
